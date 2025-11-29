@@ -63,6 +63,8 @@ def send_prompt_to_ai(prompt):
         cleaned_response = response.text.strip().replace('```json', '').replace('```', '')
         changes = json.loads(cleaned_response)
         
+        print(f"\n[DEBUG] AI Response (parsed 'changes' object):\n{json.dumps(changes, indent=2)}") # Added debug print
+
         if "files" not in changes or not isinstance(changes["files"], list):
             raise ValueError("Invalid AI response: 'files' key is missing or not a list.")
 
@@ -70,7 +72,11 @@ def send_prompt_to_ai(prompt):
             path = file_change["path"]
             content = file_change["content"]
             
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            # Ensure directory exists before writing the file
+            dir_name = os.path.dirname(path)
+            if dir_name: # Only create directory if dir_name is not an empty string
+                os.makedirs(dir_name, exist_ok=True)
+            
             with open(path, "w") as f:
                 f.write(content)
             print(f"[INFO] Wrote changes to {path}")
