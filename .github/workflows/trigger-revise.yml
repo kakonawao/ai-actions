@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   call-revise-agent:
-    if: contains(github.event.review.body, '@bot revise')
+    if: contains(github.event.review.body, '/revise')
     uses: ./.github/workflows/revise-agent.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
