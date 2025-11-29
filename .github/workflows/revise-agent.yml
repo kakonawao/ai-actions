@@ -35,6 +35,7 @@ jobs:
           ref: ${{ inputs.branch }}
 
       - name: Run revise agent
+        id: run-agent
         run: python agent/main.py
         env:
           AGENT_MODE: "revise"
@@ -42,14 +43,36 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and push changes
+      - name: Configure Git
         run: |
           git config --global user.name 'AI Developer'
           git config --global user.email 'ai-developer@users.noreply.github.com'
-          git add .
+
+      - name: Rebase onto base branch
+        run: |
+          # Fetch the base branch (assuming 'main' for now, but could be dynamic)
+          git fetch origin main:main
+          # Attempt to rebase the current branch onto main
+          git rebase origin/main || {
+            echo "Rebase failed. Manual intervention might be required."
+            exit 1
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push changes
+        run: |
+          if [ -f "ai_changed_files.txt" ]; then
+            git add --pathspec-from-file=ai_changed_files.txt
+          else
+            echo "No ai_changed_files.txt found. Staging all changes."
+            git add .
+          fi
+
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
             git commit -m "AI revisions for PR #${{ inputs.pr_number }}"
-            git push
+            # Force push after rebase, but safely with --force-with-lease to the specific branch
+            git push --force-with-lease origin HEAD:${{ inputs.branch }}
           fi
