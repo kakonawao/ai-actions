@@ -15,6 +15,10 @@ on:
         description: 'The body of the issue'
         required: true
         type: string
+    secrets:
+      GEMINI_API_KEY:
+        description: 'The API key for the Gemini service'
+        required: true
 
 permissions:
   contents: write
