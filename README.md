@@ -88,7 +88,6 @@ jobs:
   revise_pr_job:
     # Run only for reviews that contain '/revise'
     if: contains(github.event.review.body, '/revise')
-    runs-on: ubuntu-latest
     # Permissions needed by the calling workflow to pass to the reusable workflow
     permissions:
       contents: write
@@ -102,3 +101,4 @@ jobs:
           revision_instructions: ${{ github.event.review.body }}
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
+
