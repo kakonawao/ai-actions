@@ -37,15 +37,15 @@ jobs:
 
       - name: Debug Git State Before Rebase
         run: |
-          echo "--- Git Status ---"
+          echo "--- Git Status (Before Rebase) ---"
           git status
-          echo "--- Git Log (last 5) ---"
+          echo "--- Git Log (last 5, Before Rebase) ---"
           git log --oneline --graph --decorate -5
-          echo "--- Git Branch -vv ---"
+          echo "--- Git Branch -vv (Before Rebase) ---"
           git branch -vv
-          echo "--- Git Diff origin/main ---"
+          echo "--- Git Diff origin/main (Before Rebase) ---"
           git diff origin/main || true # Use || true to prevent step failure if no diff
-          echo "--------------------------"
+          echo "------------------------------------"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for some git commands in private repos
 
@@ -70,6 +70,18 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Debug Git State After Agent Run
+        run: |
+          echo "--- Git Status (After Agent Run) ---"
+          git status
+          echo "--- Git Diff HEAD (After Agent Run) ---"
+          git diff HEAD || true
+          echo "--- Git Diff --staged (After Agent Run) ---"
+          git diff --staged || true
+          echo "------------------------------------"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for some git commands in private repos
 
       - name: Commit and push changes
         run: |
