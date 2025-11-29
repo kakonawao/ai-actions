@@ -17,7 +17,7 @@ def run_draft_mode():
     You are an expert software developer. Your task is to draft a solution for the following issue.
     Issue Title: {issue_title}
     Issue Description: {issue_body}
-    Your response must be a JSON object with a "files" key, containing a list of objects, where each object has a "path" and "content" key.
+    Your entire response must be a JSON object with a "files" key, containing a list of objects, where each object has a "path" and "content" key. Do not include any conversational text or markdown formatting outside of the JSON object itself.
     """
     
     send_prompt_to_ai(prompt)
@@ -41,8 +41,7 @@ def run_revise_mode():
     Review Comments:
     {pr_comments}
     
-    Based on the comments, provide the necessary code changes. Your response must be a JSON object with a "files" key, containing a list of objects, where each object has a "path" and "content" key.
-    Only include files that need to be changed.
+    Your entire response must be a JSON object with a "files" key, containing a list of objects, where each object has a "path" and "content" key. Only include files that need to be changed. Do not include any conversational text or markdown formatting outside of the JSON object itself.
     """
     
     send_prompt_to_ai(prompt)
@@ -55,14 +54,15 @@ def send_prompt_to_ai(prompt):
 
     genai.configure(api_key=api_key)
     
-    gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash") # Read from env var, with default
+    gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
     model = genai.GenerativeModel(gemini_model_name)
 
     print(f"\n[INFO] Sending prompt to Gemini using model: {gemini_model_name}...")
     response = model.generate_content(prompt)
 
     try:
-        cleaned_response = response.text.strip().replace('```json', '').replace('```', '')
+        # Expect the model to return only JSON, so strip whitespace and attempt direct load
+        cleaned_response = response.text.strip()
         changes = json.loads(cleaned_response)
         
         print(f"\n[DEBUG] AI Response (parsed 'changes' object):\n{json.dumps(changes, indent=2)}")
