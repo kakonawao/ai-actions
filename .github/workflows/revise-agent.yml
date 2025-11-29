@@ -35,20 +35,6 @@ jobs:
           git config --global user.name 'AI Developer'
           git config --global user.email 'ai-developer@users.noreply.github.com'
 
-      - name: Debug Git State Before Rebase
-        run: |
-          echo "--- Git Status (Before Rebase) ---"
-          git status
-          echo "--- Git Log (last 5, Before Rebase) ---"
-          git log --oneline --graph --decorate -5
-          echo "--- Git Branch -vv (Before Rebase) ---"
-          git branch -vv
-          echo "--- Git Diff origin/main (Before Rebase) ---"
-          git diff origin/main || true # Use || true to prevent step failure if no diff
-          echo "------------------------------------"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for some git commands in private repos
-
       - name: Rebase onto base branch
         run: |
           git fetch origin main
@@ -71,20 +57,9 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Debug Git State After Agent Run
-        run: |
-          echo "--- Git Status (After Agent Run) ---"
-          git status
-          echo "--- Git Diff HEAD (After Agent Run) ---"
-          git diff HEAD || true
-          echo "--- Git Diff --staged (After Agent Run) ---"
-          git diff --staged || true
-          echo "------------------------------------"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for some git commands in private repos
-
       - name: Commit and push changes
         run: |
+          # Stage files
           if [ -n "${{ steps.run-agent.outputs.changed_files }}" ]; then
             echo "${{ steps.run-agent.outputs.changed_files }}" > .git_add_paths.txt
             git add --pathspec-from-file=.git_add_paths.txt
@@ -94,9 +69,18 @@ jobs:
             exit 1
           fi
 
+          # Check if there are any staged changes to commit
           if git diff --staged --quiet; then
-            echo "No changes to commit."
+            echo "No changes to commit after agent run."
           else
-            git commit -m "AI revisions for PR #${{ inputs.pr_number }}"
+            # Check if the last commit was by the AI Developer
+            LAST_COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
+            if [ "$LAST_COMMIT_AUTHOR" = "AI Developer" ]; then
+              echo "Amending last commit by AI Developer."
+              git commit --amend --no-edit
+            else
+              echo "Creating new commit for AI revisions."
+              git commit -m "AI revisions for PR #${{ inputs.pr_number }}"
+            fi
             git push --force-with-lease origin HEAD:${{ inputs.branch }}
           fi
