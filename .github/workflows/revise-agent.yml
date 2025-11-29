@@ -36,7 +36,7 @@ jobs:
 
       - name: Rebase onto base branch
         run: |
-          git fetch origin main:main
+          git fetch origin main
           git rebase origin/main || {
             echo "Rebase failed. Manual intervention might be required."
             exit 1
