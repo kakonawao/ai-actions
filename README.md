@@ -1,103 +1,89 @@
-# AI Agent Workflows
+# AI Agents for Software Development
 
-This repository contains reusable GitHub Actions workflows for AI-powered software development tasks.
+This repository contains reusable GitHub Actions workflows that act as AI agents to assist in software development tasks, such as drafting initial solutions and revising pull requests.
 
-## Reusable Workflows
+## Setup
 
-You can integrate the `draft-agent` and `revise-agent` workflows into your own repositories to automate drafting and revising code.
+To use these agents, you will need to set up the following secrets in your GitHub repository or organization:
 
-### Using the Workflows
+*   `GITHUB_TOKEN`: A GitHub personal access token with appropriate permissions (e.g., `contents: write`, `issues: write`, `pull_requests: write`) for the agents to create/update files, issues, and PRs.
+*   `GEMINI_API_KEY`: Your API key for the Gemini model. This is required for both the Draft and Revise agents to interact with the AI.
 
-To use a reusable workflow, you create a new workflow file in your repository (e.g., `.github/workflows/call-draft-agent.yml`) and reference the workflow from this repository using the `uses:` keyword.
+## Draft Agent (`draft-agent.yml`)
 
-The general format is:
-`uses: kakonawao/ai-actions/.github/workflows/workflow-file.yml@ref`
+This agent drafts an initial solution based on a new issue.
 
-Replace `ref` with a specific branch, tag, or commit SHA (e.g., `main` or `v1.0.0`).
+### Inputs:
 
----
+*   `issue_title`: Title of the GitHub issue.
+*   `issue_body`: Body of the GitHub issue.
 
-### Draft Agent (`draft-agent.yml`)
+### Secrets:
 
-This workflow is designed to read a GitHub issue and draft a potential solution based on its content. It will typically create a new branch and open a pull request with the drafted files.
+*   `GITHUB_TOKEN`: Required for interacting with GitHub API.
+*   `GEMINI_API_KEY`: Your API key for the Gemini model.
 
-**Inputs:**
-* `issue_number`: (Required) The number of the issue to draft a solution for.
-* `repository_context`: (Required) The `owner/repo` string for the repository containing the issue.
+### Example Trigger Workflow (`.github/workflows/trigger-draft.yml`):
 
-**Secrets:**
-* `token`: (Required) A GitHub token with permissions to read issues, write contents, and create pull requests. `secrets.GITHUB_TOKEN` is usually sufficient if the calling workflow has the necessary permissions.
-
-**Example Trigger Workflow:**
-
-You can trigger this workflow by commenting `/draft` on an issue in your repository. Save the following code in your repository as `.github/workflows/draft-solution.yml`.
-
-```yaml
-name: Draft Solution on Command
-
+yaml
 on:
-  issue_comment:
-    types: [created]
+  issues:
+    types: [opened, reopened]
 
 jobs:
-  draft_solution_job:
-    # Run only for comments on issues (not PRs) that contain '/draft'
-    if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/draft')
-    # Permissions needed by the calling workflow to pass to the reusable workflow
+  draft_solution:
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      issues: read
-
+      contents: write        # Required if the agent creates/updates files
+      issues: write          # Required if the agent creates comments/labels on issues
+      pull-requests: write   # Required if the agent creates PRs
     steps:
-      - name: Call Draft Agent Workflow
-        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main
+      - name: Draft Solution
+        uses: your-org/your-repo/.github/workflows/draft-agent.yml@main # Replace with your actual repo path and ref
         with:
-          issue_number: ${{ github.event.issue.number }}
-          repository_context: ${{ github.repository }}
+          issue_title: ${{ github.event.issue.title }}
+          issue_body: ${{ github.event.issue.body }}
         secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
-``` 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
----
 
-### Revise Agent (`revise-agent.yml`)
+## Revise Agent (`revise-agent.yml`)
 
-This workflow revises an existing pull request based on feedback or instructions provided in a review. It will commit changes directly to the pull request's branch.
+This agent revises a pull request based on review comments or other triggers.
 
-**Inputs:**
-*   `pull_request_number`: (Required) The number of the pull request to revise.
-*   `revision_instructions`: (Required) The text containing the instructions for the revision (e.g., the content of the triggering review comment).
+### Inputs:
 
-**Secrets:**
-*   `token`: (Required) A GitHub token with permissions to read pull requests and write contents.
+*   `pr_number`: The pull request number.
 
-**Example Trigger Workflow:**
+### Secrets:
 
-You can trigger this workflow by submitting a pull request review that contains `/revise` followed by your instructions. Save the following code in your repository as `.github/workflows/revise-pr.yml`.
+*   `GITHUB_TOKEN`: Required for interacting with GitHub API.
+*   `GEMINI_API_KEY`: Your API key for the Gemini model.
 
-```yaml
-name: Revise PR on Command
+### Example Trigger Workflow (`.github/workflows/trigger-revise.yml`):
 
+yaml
 on:
   pull_request_review:
     types: [submitted]
+  issue_comment: # Often revisions are also triggered by comments (e.g., /revise command)
+    types: [created]
 
 jobs:
-  revise_pr_job:
-    # Run only for reviews that contain '/revise'
-    if: contains(github.event.review.body, '/revise')
-    # Permissions needed by the calling workflow to pass to the reusable workflow
+  revise_pr:
+    if: |
+      github.event_name == 'pull_request_review' && (github.event.review.state == 'commented' || github.event.review.state == 'changes_requested') ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/revise'))
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: read
-
+      pull-requests: write
     steps:
-      - name: Call Revise Agent Workflow
-        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main
+      - name: Revise Pull Request
+        uses: your-org/your-repo/.github/workflows/revise-agent.yml@main # Replace with your actual repo path and ref
         with:
-          pull_request_number: ${{ github.event.pull_request.number }}
-          revision_instructions: ${{ github.event.review.body }}
+          pr_number: ${{ github.event.issue.pull_request.number || github.event.pull_request.number }} # Handle both issue_comment (pr_number under issue.pull_request) and pull_request_review (pr_number under pull_request)
         secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
-```
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
