@@ -21,15 +21,14 @@ permissions:
   pull-requests: write
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup-agent.yml
-    with:
-      ref: ${{ inputs.branch }}
-
   revise-task:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Agent Environment
+        uses: ./.github/actions/setup-agent
+        with:
+          ref: ${{ inputs.branch }}
+
       - name: Run revise agent
         run: python agent/main.py
         env:
