@@ -11,9 +11,9 @@ You can integrate the `draft-agent` and `revise-agent` workflows into your own r
 To use a reusable workflow, you create a new workflow file in your repository (e.g., `.github/workflows/call-draft-agent.yml`) and reference the workflow from this repository using the `uses:` keyword.
 
 The general format is:
-`uses: owner/repository/.github/workflows/workflow-file.yml@ref`
+`uses: kakonawao/ai-actions/.github/workflows/workflow-file.yml@ref`
 
-Replace `owner/repository` with the path to this repository and `ref` with a specific branch, tag, or commit SHA (e.g., `main` or `v1.0.0`).
+Replace `ref` with a specific branch, tag, or commit SHA (e.g., `main` or `v1.0.0`).
 
 ---
 
@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Call Draft Agent Workflow
-        uses: owner/repository/.github/workflows/draft-agent.yml@main
+        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main
         with:
           issue_number: ${{ github.event.issue.number }}
           repository_context: ${{ github.repository }}
@@ -94,7 +94,7 @@ jobs:
 
     steps:
       - name: Call Revise Agent Workflow
-        uses: owner/repository/.github/workflows/revise-agent.yml@main
+        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main
         with:
           pull_request_number: ${{ github.event.pull_request.number }}
           revision_instructions: ${{ github.event.review.body }}
