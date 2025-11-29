@@ -15,9 +15,6 @@ on:
       GEMINI_API_KEY:
         description: 'The API key for the Gemini service'
         required: true
-      GITHUB_TOKEN:
-        description: 'The GitHub token for CLI authentication'
-        required: true
 
 permissions:
   contents: write
