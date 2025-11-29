@@ -22,42 +22,42 @@ Replace `owner/repository` with the path to this repository and `ref` with a spe
 This workflow is designed to read a GitHub issue and draft a potential solution based on its content. It will typically create a new branch and open a pull request with the drafted files.
 
 **Inputs:**
-*   `issue_number`: (Required) The number of the issue to draft a solution for.
-*   `repository_context`: (Required) The `owner/repo` string for the repository containing the issue.
+* `issue_number`: (Required) The number of the issue to draft a solution for.
+* `repository_context`: (Required) The `owner/repo` string for the repository containing the issue.
 
 **Secrets:**
-*   `token`: (Required) A GitHub token with permissions to read issues, write contents, and create pull requests. `secrets.GITHUB_TOKEN` is usually sufficient if the calling workflow has the necessary permissions.
+* `token`: (Required) A GitHub token with permissions to read issues, write contents, and create pull requests. `secrets.GITHUB_TOKEN` is usually sufficient if the calling workflow has the necessary permissions.
 
 **Example Trigger Workflow:**
 
 You can trigger this workflow by commenting `/draft` on an issue in your repository. Save the following code in your repository as `.github/workflows/draft-solution.yml`.
 
-    yaml
-    name: Draft Solution on Command
+```yaml
+name: Draft Solution on Command
 
-    on:
-      issue_comment:
-        types: [created]
+on:
+  issue_comment:
+    types: [created]
 
-    jobs:
-      draft_solution_job:
-        # Run only for comments on issues (not PRs) that contain '/draft'
-        if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/draft')
-        # Permissions needed by the calling workflow to pass to the reusable workflow
-        permissions:
-          contents: write
-          pull-requests: write
-          issues: read
+jobs:
+  draft_solution_job:
+    # Run only for comments on issues (not PRs) that contain '/draft'
+    if: github.event.issue.pull_request == null && contains(github.event.comment.body, '/draft')
+    # Permissions needed by the calling workflow to pass to the reusable workflow
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
 
-        steps:
-          - name: Call Draft Agent Workflow
-            uses: owner/repository/.github/workflows/draft-agent.yml@main
-            with:
-              issue_number: ${{ github.event.issue.number }}
-              repository_context: ${{ github.repository }}
-            secrets:
-              token: ${{ secrets.GITHUB_TOKEN }}
-    
+    steps:
+      - name: Call Draft Agent Workflow
+        uses: owner/repository/.github/workflows/draft-agent.yml@main
+        with:
+          issue_number: ${{ github.event.issue.number }}
+          repository_context: ${{ github.repository }}
+        secrets:
+          token: ${{ secrets.GITHUB_TOKEN }}
+``` 
 
 ---
 
@@ -76,28 +76,28 @@ This workflow revises an existing pull request based on feedback or instructions
 
 You can trigger this workflow by submitting a pull request review that contains `/revise` followed by your instructions. Save the following code in your repository as `.github/workflows/revise-pr.yml`.
 
-    yaml
-    name: Revise PR on Command
+```yaml
+name: Revise PR on Command
 
-    on:
-      pull_request_review:
-        types: [submitted]
+on:
+  pull_request_review:
+    types: [submitted]
 
-    jobs:
-      revise_pr_job:
-        # Run only for reviews that contain '/revise'
-        if: contains(github.event.review.body, '/revise')
-        # Permissions needed by the calling workflow to pass to the reusable workflow
-        permissions:
-          contents: write
-          pull-requests: read
+jobs:
+  revise_pr_job:
+    # Run only for reviews that contain '/revise'
+    if: contains(github.event.review.body, '/revise')
+    # Permissions needed by the calling workflow to pass to the reusable workflow
+    permissions:
+      contents: write
+      pull-requests: read
 
-        steps:
-          - name: Call Revise Agent Workflow
-            uses: owner/repository/.github/workflows/revise-agent.yml@main
-            with:
-              pull_request_number: ${{ github.event.pull_request.number }}
-              revision_instructions: ${{ github.event.review.body }}
-            secrets:
-              token: ${{ secrets.GITHUB_TOKEN }}
-    
+    steps:
+      - name: Call Revise Agent Workflow
+        uses: owner/repository/.github/workflows/revise-agent.yml@main
+        with:
+          pull_request_number: ${{ github.event.pull_request.number }}
+          revision_instructions: ${{ github.event.review.body }}
+        secrets:
+          token: ${{ secrets.GITHUB_TOKEN }}
+```
