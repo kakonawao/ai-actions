@@ -29,20 +29,6 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Setup Agent Environment
-        uses: ./.github/actions/setup-agent
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Run revise agent
-        id: run-agent
-        run: python agent/main.py
-        env:
-          AGENT_MODE: "revise"
-          PR_NUMBER: ${{ inputs.pr_number }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Configure Git
         run: |
           git config --global user.name 'AI Developer'
@@ -58,6 +44,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Agent Environment
+        uses: ./.github/actions/setup-agent
+
+      - name: Run revise agent
+        id: run-agent
+        run: python agent/main.py
+        env:
+          AGENT_MODE: "revise"
+          PR_NUMBER: ${{ inputs.pr_number }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Commit and push changes
         run: |
           if [ -n "${{ steps.run-agent.outputs.changed_files }}" ]; then
@@ -66,7 +64,7 @@ jobs:
             rm .git_add_paths.txt
           else
             echo "Error: Agent did not provide any changed files. Failing to prevent unintended commits."
-            exit 1 # Fail the step if no changed files are provided
+            exit 1
           fi
 
           if git diff --staged --quiet; then

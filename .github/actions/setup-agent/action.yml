@@ -6,10 +6,6 @@ inputs:
     description: 'Python version to use'
     required: false
     default: '3.x'
-  ref:
-    description: 'The branch or ref to checkout'
-    required: false
-    default: ${{ github.ref }}
 
 runs:
   using: "composite"

@@ -50,7 +50,7 @@ jobs:
             exit 1
           fi
 
-      - name: Agent changed_files output
+      - name: Debug: Agent changed_files output
         run: |
           echo "--- Value of steps.run-agent.outputs.changed_files ---"
           echo "${{ steps.run-agent.outputs.changed_files }}"
