@@ -40,7 +40,7 @@ jobs:
       pull-requests: write   # Required if the agent creates PRs
     steps:
       - name: Draft Solution
-        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main # Corrected repo path
+        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main
         with:
           issue_title: ${{ github.event.issue.title }}
           issue_body: ${{ github.event.issue.body }}
@@ -81,7 +81,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Revise Pull Request
-        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main # Corrected repo path
+        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main
         with:
           pr_number: ${{ github.event.issue.pull_request.number || github.event.pull_request.number }} # Handle both issue_comment (pr_number under issue.pull_request) and pull_request_review (pr_number under pull_request)
         secrets:
