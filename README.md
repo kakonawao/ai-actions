@@ -34,14 +34,13 @@ on:
 
 jobs:
   draft_solution:
-    runs-on: ubuntu-latest
     permissions:
       contents: write        # Required if the agent creates/updates files
-      issues: write          # Required if the agent creates comments/labels on issues
+      issues: read           # Required if the agent creates comments/labels on issues
       pull-requests: write   # Required if the agent creates PRs
     steps:
       - name: Draft Solution
-        uses: your-org/your-repo/.github/workflows/draft-agent.yml@main # Replace with your actual repo path and ref
+        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main # Corrected repo path
         with:
           issue_title: ${{ github.event.issue.title }}
           issue_body: ${{ github.event.issue.body }}
@@ -77,13 +76,12 @@ jobs:
     if: |
       github.event_name == 'pull_request_review' && (github.event.review.state == 'commented' || github.event.review.state == 'changes_requested') ||
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/revise'))
-    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
       - name: Revise Pull Request
-        uses: your-org/your-repo/.github/workflows/revise-agent.yml@main # Replace with your actual repo path and ref
+        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main # Corrected repo path
         with:
           pr_number: ${{ github.event.issue.pull_request.number || github.event.pull_request.number }} # Handle both issue_comment (pr_number under issue.pull_request) and pull_request_review (pr_number under pull_request)
         secrets:
