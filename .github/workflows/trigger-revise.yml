@@ -1,8 +1,8 @@
 name: Trigger Revise Agent
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   contents: write
@@ -10,10 +10,10 @@ permissions:
 
 jobs:
   call-revise-agent:
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '@bot revise')
+    if: contains(github.event.review.body, '@bot revise')
     uses: ./.github/workflows/revise-agent.yml
     with:
-      pr_number: ${{ github.event.issue.number }}
-      branch: ${{ github.event.issue.pull_request.head.ref }}
+      pr_number: ${{ github.event.pull_request.number }}
+      branch: ${{ github.event.pull_request.head.ref }}
     secrets:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
