@@ -85,12 +85,20 @@ def send_prompt_to_ai(prompt):
             print(f"[INFO] Wrote changes to {path}")
             changed_file_paths.append(path)
 
-        # Output the list of changed files as a step output
-        print("::set-output name=changed_files::<<EOF")
-        for p in changed_file_paths:
-            print(p)
-        print("EOF")
-        print(f"[INFO] Outputted {len(changed_file_paths)} changed file paths.")
+        print(f"\n[DEBUG] Collected changed_file_paths: {changed_file_paths}")
+
+        # Output the list of changed files as a step output using GITHUB_OUTPUT
+        github_output_path = os.getenv("GITHUB_OUTPUT")
+        if github_output_path:
+            with open(github_output_path, "a") as f:
+                f.write("changed_files<<EOF\n")
+                for p in changed_file_paths:
+                    f.write(f"{p}\n")
+                f.write("EOF\n")
+            print(f"[INFO] Outputted {len(changed_file_paths)} changed file paths to GITHUB_OUTPUT.")
+        else:
+            print("[ERROR] GITHUB_OUTPUT environment variable not set. Cannot set step output.")
+
 
     except (json.JSONDecodeError, ValueError, KeyError) as e:
         print(f"[ERROR] Failed to parse AI response: {e}")
