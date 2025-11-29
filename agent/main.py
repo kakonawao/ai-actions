@@ -3,6 +3,9 @@ import json
 import subprocess
 import google.generativeai as genai
 
+# Define a constant for the file to store changed paths
+CHANGED_FILES_LIST = "ai_changed_files.txt"
+
 def run_draft_mode():
     """Handles the initial code generation from an issue."""
     print("[INFO] Running in 'draft' mode.")
@@ -63,10 +66,13 @@ def send_prompt_to_ai(prompt):
         cleaned_response = response.text.strip().replace('```json', '').replace('```', '')
         changes = json.loads(cleaned_response)
         
-        print(f"\n[DEBUG] AI Response (parsed 'changes' object):\n{json.dumps(changes, indent=2)}") # Added debug print
+        print(f"\n[DEBUG] AI Response (parsed 'changes' object):\n{json.dumps(changes, indent=2)}")
 
         if "files" not in changes or not isinstance(changes["files"], list):
             raise ValueError("Invalid AI response: 'files' key is missing or not a list.")
+
+        # Collect paths of changed files
+        changed_file_paths = []
 
         for file_change in changes["files"]:
             path = file_change["path"]
@@ -74,12 +80,19 @@ def send_prompt_to_ai(prompt):
             
             # Ensure directory exists before writing the file
             dir_name = os.path.dirname(path)
-            if dir_name: # Only create directory if dir_name is not an empty string
+            if dir_name:
                 os.makedirs(dir_name, exist_ok=True)
             
             with open(path, "w") as f:
                 f.write(content)
             print(f"[INFO] Wrote changes to {path}")
+            changed_file_paths.append(path)
+
+        # Write the list of changed files to a temporary file
+        with open(CHANGED_FILES_LIST, "w") as f:
+            for p in changed_file_paths:
+                f.write(f"{p}\n")
+        print(f"[INFO] Recorded changed files in {CHANGED_FILES_LIST}")
 
     except (json.JSONDecodeError, ValueError, KeyError) as e:
         print(f"[ERROR] Failed to parse AI response: {e}")
