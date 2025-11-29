@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 import google.generativeai as genai
+import re # Re-import the re module
 
 def run_draft_mode():
     """Handles the initial code generation from an issue."""
@@ -61,9 +62,25 @@ def send_prompt_to_ai(prompt):
     response = model.generate_content(prompt)
 
     try:
-        # Expect the model to return only JSON, so strip whitespace and attempt direct load
-        cleaned_response = response.text.strip()
-        changes = json.loads(cleaned_response)
+        # Use regex to find the JSON block, allowing for text before and after, and markdown fences
+        json_match = re.search(r"```json\s*(\{.*\})\s*```", response.text, re.DOTALL)
+        
+        if not json_match:
+            # Fallback if model doesn't use fences, but still expects pure JSON
+            # This handles cases where the model might adhere to the "no markdown" instruction
+            try:
+                changes = json.loads(response.text.strip())
+                print("[INFO] Model returned pure JSON without markdown fences.")
+                # If successful, bypass the rest of the try block and proceed with changes
+                # This is a bit of a hack, but avoids duplicating the rest of the logic
+                # and prioritizes pure JSON if it works.
+                pass 
+            except json.JSONDecodeError:
+                raise ValueError("No valid JSON block found in AI response, and response is not pure JSON.")
+        else:
+            cleaned_response = json_match.group(1) # Extract only the JSON content
+            changes = json.loads(cleaned_response)
+            print("[INFO] Extracted JSON from markdown fences.")
         
         print(f"\n[DEBUG] AI Response (parsed 'changes' object):\n{json.dumps(changes, indent=2)}")
 
