@@ -50,9 +50,7 @@ jobs:
 
       - name: Rebase onto base branch
         run: |
-          # Fetch the base branch (assuming 'main' for now, but could be dynamic)
           git fetch origin main:main
-          # Attempt to rebase the current branch onto main
           git rebase origin/main || {
             echo "Rebase failed. Manual intervention might be required."
             exit 1
@@ -62,17 +60,18 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          if [ -f "ai_changed_files.txt" ]; then
-            git add --pathspec-from-file=ai_changed_files.txt
+          if [ -n "${{ steps.run-agent.outputs.changed_files }}" ]; then
+            echo "${{ steps.run-agent.outputs.changed_files }}" > .git_add_paths.txt
+            git add --pathspec-from-file=.git_add_paths.txt
+            rm .git_add_paths.txt
           else
-            echo "No ai_changed_files.txt found. Staging all changes."
-            git add .
+            echo "Error: Agent did not provide any changed files. Failing to prevent unintended commits."
+            exit 1 # Fail the step if no changed files are provided
           fi
 
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
             git commit -m "AI revisions for PR #${{ inputs.pr_number }}"
-            # Force push after rebase, but safely with --force-with-lease to the specific branch
             git push --force-with-lease origin HEAD:${{ inputs.branch }}
           fi

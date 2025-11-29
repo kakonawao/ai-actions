@@ -3,9 +3,6 @@ import json
 import subprocess
 import google.generativeai as genai
 
-# Define a constant for the file to store changed paths
-CHANGED_FILES_LIST = "ai_changed_files.txt"
-
 def run_draft_mode():
     """Handles the initial code generation from an issue."""
     print("[INFO] Running in 'draft' mode.")
@@ -88,17 +85,16 @@ def send_prompt_to_ai(prompt):
             print(f"[INFO] Wrote changes to {path}")
             changed_file_paths.append(path)
 
-        # Write the list of changed files to a temporary file
-        with open(CHANGED_FILES_LIST, "w") as f:
-            for p in changed_file_paths:
-                f.write(f"{p}\n")
-        print(f"[INFO] Recorded changed files in {CHANGED_FILES_LIST}")
+        # Output the list of changed files as a step output
+        print("::set-output name=changed_files::<<EOF")
+        for p in changed_file_paths:
+            print(p)
+        print("EOF")
+        print(f"[INFO] Outputted {len(changed_file_paths)} changed file paths.")
 
     except (json.JSONDecodeError, ValueError, KeyError) as e:
         print(f"[ERROR] Failed to parse AI response: {e}")
         print(f"Raw response was:\n{response.text}")
-        with open("ai_response_error.txt", "w") as f:
-            f.write(f"Failed to parse AI response.\n\nError: {e}\n\nRaw Response:\n{response.text}")
 
 def main():
     mode = os.getenv("AGENT_MODE", "draft")

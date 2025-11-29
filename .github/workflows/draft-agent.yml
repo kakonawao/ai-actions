@@ -35,12 +35,20 @@ jobs:
         uses: ./.github/actions/setup-agent
 
       - name: Run draft agent
+        id: run-agent
         run: python agent/main.py
         env:
           AGENT_MODE: "draft"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ISSUE_TITLE: ${{ inputs.issue_title }}
           ISSUE_BODY: ${{ inputs.issue_body }}
+
+      - name: Validate agent output
+        run: |
+          if [ -z "${{ steps.run-agent.outputs.changed_files }}" ]; then
+            echo "Error: Agent did not provide any changed files. Failing to prevent unintended commits."
+            exit 1
+          fi
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -56,3 +64,4 @@ jobs:
           base: main
           author: AI Developer <ai-developer@users.noreply.github.com>
           committer: AI Developer <ai-developer@users.noreply.github.com>
+          add-paths: ${{ steps.run-agent.outputs.changed_files }}
