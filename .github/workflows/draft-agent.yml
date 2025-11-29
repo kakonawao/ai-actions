@@ -28,20 +28,20 @@ jobs:
   draft-task:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository for local actions
+      - name: Checkout target repository
         uses: actions/checkout@v4
+        with:
+          ref: 'main' # Checkout the main branch of the target repo
 
-      - name: Setup Agent Environment
-        uses: ./.github/actions/setup-agent
-
-      - name: Run draft agent
+      - name: Run AI Agent
         id: run-agent
-        run: python agent/main.py
-        env:
-          AGENT_MODE: "draft"
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          ISSUE_TITLE: ${{ inputs.issue_title }}
-          ISSUE_BODY: ${{ inputs.issue_body }}
+        uses: kakonawao/ai-actions/.github/actions/run-ai-agent@main
+        with:
+          agent_mode: "draft"
+          issue_title: ${{ inputs.issue_title }}
+          issue_body: ${{ inputs.issue_body }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Pass GITHUB_TOKEN for gh CLI if needed by agent
 
       - name: Validate agent output
         run: |

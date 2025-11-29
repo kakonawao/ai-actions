@@ -54,9 +54,11 @@ def send_prompt_to_ai(prompt):
         raise RuntimeError("GEMINI_API_KEY not set.")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('models/gemini-2.5-flash')
+    
+    gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash") # Read from env var, with default
+    model = genai.GenerativeModel(gemini_model_name)
 
-    print("\n[INFO] Sending prompt to Gemini...")
+    print(f"\n[INFO] Sending prompt to Gemini using model: {gemini_model_name}...")
     response = model.generate_content(prompt)
 
     try:
