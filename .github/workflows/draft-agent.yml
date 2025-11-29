@@ -1,0 +1,54 @@
+name: Draft Agent
+
+on:
+  workflow_call:
+    inputs:
+      issue_number:
+        description: 'The number of the issue to draft a solution for'
+        required: true
+        type: number
+      issue_title:
+        description: 'The title of the issue'
+        required: true
+        type: string
+      issue_body:
+        description: 'The body of the issue'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  setup:
+    uses: ./.github/workflows/setup-agent.yml
+    with:
+      ref: 'main'
+
+  draft-task:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run draft agent
+        run: python agent/main.py
+        env:
+          AGENT_MODE: "draft"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_TITLE: ${{ inputs.issue_title }}
+          ISSUE_BODY: ${{ inputs.issue_body }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "AI draft for issue #${{ inputs.issue_number }}"
+          title: "AI draft for: ${{ inputs.issue_title }}"
+          body: |
+            This PR was automatically drafted by an AI agent in response to issue #${{ inputs.issue_number }}.
+            
+            ${{ inputs.issue_body }}
+          branch: ai-draft/${{ inputs.issue_number }}
+          base: main
+          author: AI Developer <ai-developer@users.noreply.github.com>
+          committer: AI Developer <ai-developer@users.noreply.github.com>

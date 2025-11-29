@@ -1,0 +1,15 @@
+name: Trigger Draft Agent
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  call-draft-agent:
+    uses: ./.github/workflows/draft-agent.yml
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_title: ${{ github.event.issue.title }}
+      issue_body: ${{ github.event.issue.body }}
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
