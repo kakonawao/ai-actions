@@ -28,10 +28,11 @@ jobs:
   draft-task:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository for local actions
+        uses: actions/checkout@v4
+
       - name: Setup Agent Environment
         uses: ./.github/actions/setup-agent
-        with:
-          ref: 'main' # Ensure the main branch is checked out for the agent to run
 
       - name: Run draft agent
         run: python agent/main.py

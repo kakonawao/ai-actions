@@ -3,8 +3,6 @@ import json
 import subprocess
 import google.generativeai as genai
 
-# --- Agent Modes ---
-
 def run_draft_mode():
     """Handles the initial code generation from an issue."""
     print("[INFO] Running in 'draft' mode.")
@@ -31,7 +29,6 @@ def run_revise_mode():
     if not pr_number:
         raise RuntimeError("PR_NUMBER not set.")
 
-    # Fetch PR data using GitHub CLI
     pr_diff = subprocess.check_output(['gh', 'pr', 'diff', pr_number]).decode('utf-8')
     pr_comments = subprocess.check_output(['gh', 'pr', 'view', pr_number, '--comments']).decode('utf-8')
 
@@ -49,8 +46,6 @@ def run_revise_mode():
     """
     
     send_prompt_to_ai(prompt)
-
-# --- AI and File Handling ---
 
 def send_prompt_to_ai(prompt):
     """Sends the generated prompt to the Gemini API and applies the changes."""
@@ -85,8 +80,6 @@ def send_prompt_to_ai(prompt):
         print(f"Raw response was:\n{response.text}")
         with open("ai_response_error.txt", "w") as f:
             f.write(f"Failed to parse AI response.\n\nError: {e}\n\nRaw Response:\n{response.text}")
-
-# --- Main Execution ---
 
 def main():
     mode = os.getenv("AGENT_MODE", "draft")

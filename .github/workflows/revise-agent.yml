@@ -24,6 +24,11 @@ jobs:
   revise-task:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository for local actions
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
       - name: Setup Agent Environment
         uses: ./.github/actions/setup-agent
         with:
