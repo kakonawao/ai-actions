@@ -34,6 +34,20 @@ jobs:
           git config --global user.name 'AI Developer'
           git config --global user.email 'ai-developer@users.noreply.github.com'
 
+      - name: Debug Git State Before Rebase
+        run: |
+          echo "--- Git Status ---"
+          git status
+          echo "--- Git Log (last 5) ---"
+          git log --oneline --graph --decorate -5
+          echo "--- Git Branch -vv ---"
+          git branch -vv
+          echo "--- Git Diff origin/main ---"
+          git diff origin/main || true # Use || true to prevent step failure if no diff
+          echo "--------------------------"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed for some git commands in private repos
+
       - name: Rebase onto base branch
         run: |
           git fetch origin main
