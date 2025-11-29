@@ -25,7 +25,9 @@ This agent drafts an initial solution based on a new issue.
 
 ### Example Trigger Workflow (`.github/workflows/trigger-draft.yml`):
 
-yaml
+```yaml
+name: Draft Solution on Command
+
 on:
   issues:
     types: [opened, reopened]
@@ -46,7 +48,7 @@ jobs:
         secrets:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
+```
 
 ## Revise Agent (`revise-agent.yml`)
 
@@ -63,7 +65,7 @@ This agent revises a pull request based on review comments or other triggers.
 
 ### Example Trigger Workflow (`.github/workflows/trigger-revise.yml`):
 
-yaml
+```yaml
 on:
   pull_request_review:
     types: [submitted]
@@ -87,3 +89,4 @@ jobs:
         secrets:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+```
