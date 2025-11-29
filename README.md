@@ -64,30 +64,30 @@ jobs:
 
 ### Revise Agent (`revise-agent.yml`)
 
-This workflow revises an existing pull request based on feedback or instructions provided in a comment. It will commit changes directly to the pull request's branch.
+This workflow revises an existing pull request based on feedback or instructions provided in a review. It will commit changes directly to the pull request's branch.
 
 **Inputs:**
 *   `pull_request_number`: (Required) The number of the pull request to revise.
-*   `revision_instructions`: (Required) The text containing the instructions for the revision (e.g., the content of the triggering comment).
+*   `revision_instructions`: (Required) The text containing the instructions for the revision (e.g., the content of the triggering review comment).
 
 **Secrets:**
 *   `token`: (Required) A GitHub token with permissions to read pull requests and write contents.
 
 **Example Trigger Workflow:**
 
-You can trigger this workflow by commenting `/revise` followed by your instructions on a pull request. Save the following code in your repository as `.github/workflows/revise-pr.yml`.
+You can trigger this workflow by submitting a pull request review that contains `/revise` followed by your instructions. Save the following code in your repository as `.github/workflows/revise-pr.yml`.
 
 yaml
 name: Revise PR on Command
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   revise_pr_job:
-    # Run only for comments on pull requests that contain '/revise'
-    if: github.event.issue.pull_request && contains(github.event.comment.body, '/revise')
+    # Run only for reviews that contain '/revise'
+    if: contains(github.event.review.body, '/revise')
     runs-on: ubuntu-latest
     # Permissions needed by the calling workflow to pass to the reusable workflow
     permissions:
@@ -98,9 +98,7 @@ jobs:
       - name: Call Revise Agent Workflow
         uses: owner/repository/.github/workflows/revise-agent.yml@main
         with:
-          # For PR comments, the issue number is the PR number
-          pull_request_number: ${{ github.event.issue.number }}
-          revision_instructions: ${{ github.event.comment.body }}
+          pull_request_number: ${{ github.event.pull_request.number }}
+          revision_instructions: ${{ github.event.review.body }}
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
-
