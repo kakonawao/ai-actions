@@ -50,6 +50,12 @@ jobs:
             exit 1
           fi
 
+      - name: Agent changed_files output
+        run: |
+          echo "--- Value of steps.run-agent.outputs.changed_files ---"
+          echo "${{ steps.run-agent.outputs.changed_files }}"
+          echo "----------------------------------------------------"
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
