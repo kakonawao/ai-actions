@@ -45,9 +45,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run AI Agent
+      - name: Setup Coding Agent Environment
+        uses: kakonawao/ai-actions/.github/actions/setup-coding-agent@main
+
+      - name: Run Coding Agent
         id: run-agent
-        uses: kakonawao/ai-actions/.github/actions/run-ai-agent@main
+        uses: kakonawao/ai-actions/.github/actions/run-coding-agent@main
         with:
           agent_mode: "revise"
           pr_number: ${{ inputs.pr_number }}

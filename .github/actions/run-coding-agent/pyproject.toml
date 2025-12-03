@@ -3,7 +3,8 @@ name = "coding-agent"
 version = "0.1.0"
 description = "A simple coding agent using Gemini."
 dependencies = [
-    "google-generativeai",
+    "langchain",
+    "langchain-google-genai",
 ]
 
 [tool.uv]

@@ -33,9 +33,12 @@ jobs:
         with:
           ref: 'main' # Checkout the main branch of the target repo
 
-      - name: Run AI Agent
+      - name: Setup Coding Agent Environment
+        uses: kakonawao/ai-actions/.github/actions/setup-coding-agent@main
+
+      - name: Run Coding Agent
         id: run-agent
-        uses: kakonawao/ai-actions/.github/actions/run-ai-agent@main
+        uses: kakonawao/ai-actions/.github/actions/run-coding-agent@main
         with:
           agent_mode: "draft"
           issue_title: ${{ inputs.issue_title }}

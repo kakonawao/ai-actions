@@ -1,5 +1,5 @@
-name: 'Run AI Agent'
-description: 'Sets up Python, installs agent dependencies, and runs the AI agent script.'
+name: 'Run Coding Agent'
+description: 'Sets up Python, installs agent dependencies, and runs the coding agent script.'
 
 inputs:
   agent_mode:

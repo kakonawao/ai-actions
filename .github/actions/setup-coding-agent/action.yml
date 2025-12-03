@@ -1,4 +1,4 @@
-name: 'Setup Agent Environment'
+name: 'Setup Coding Agent Environment'
 description: 'Installs uv and gh CLI.'
 
 runs:
