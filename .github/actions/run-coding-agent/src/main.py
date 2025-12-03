@@ -11,13 +11,13 @@ def run_agent(user_prompt: str):
     """Initializes and runs the LangChain agent."""
     print("[INFO] Initializing LangChain agent...")
     
-    gemini_model_name = os.getenv("GEMINI_MODEL", "models/gemini-pro")
+    gemini_model_name = os.getenv("GEMINI_MODEL")
     llm = ChatGoogleGenerativeAI(model=gemini_model_name, temperature=0)
 
     tools = [list_files, read_file, write_file]
     
     # Define the system prompt for the agent
-    system_prompt_content = ( # Renamed to avoid conflict with create_agent arg
+    system_prompt_content = (
         "You are an expert software developer. Your task is to analyze the codebase, "
         "understand the context, and then write the necessary code changes to solve the request. "
         "Use the available tools to explore the codebase, read relevant files, and write new or updated files. "
