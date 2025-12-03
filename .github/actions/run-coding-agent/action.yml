@@ -54,7 +54,8 @@ runs:
     - name: Run agent script
       id: run-script
       shell: bash
-      run: python ${{ github.action_path }}/main.py
+      run: python -m src.main
+      working-directory: ${{ github.action_path }}
       env:
         AGENT_MODE: ${{ inputs.agent_mode }}
         ISSUE_TITLE: ${{ inputs.issue_title }}

@@ -7,5 +7,8 @@ dependencies = [
     "langchain-google-genai",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.uv]
 # You can add uv-specific configurations here if needed.
