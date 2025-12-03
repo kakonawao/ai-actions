@@ -1,14 +1,13 @@
 import os
 import subprocess
 
-from langchain.agents import AgentType, initialize_agent
-from langchain.prompts import PromptTemplate
+from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .tools import list_files, read_file, write_file, _written_files
 
 
-def run_agent(prompt: str):
+def run_agent(user_prompt: str):
     """Initializes and runs the LangChain agent."""
     print("[INFO] Initializing LangChain agent...")
     
@@ -17,16 +16,27 @@ def run_agent(prompt: str):
 
     tools = [list_files, read_file, write_file]
     
-    agent = initialize_agent(
-        tools,
-        llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=True,
+    # Define the system prompt for the agent
+    system_prompt_content = ( # Renamed to avoid conflict with create_agent arg
+        "You are an expert software developer. Your task is to analyze the codebase, "
+        "understand the context, and then write the necessary code changes to solve the request. "
+        "Use the available tools to explore the codebase, read relevant files, and write new or updated files. "
+        "Your final answer should be a summary of the files you wrote or a confirmation that no changes were needed."
+    )
+    
+    # Create the agent directly
+    agent = create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt=system_prompt_content,
     )
 
-    print(f"[INFO] Running agent with prompt:\n{prompt}")
-    response = agent.run(prompt)
-    print(f"[INFO] Agent finished with response:\n{response}")
+    print(f"[INFO] Running agent with prompt:\n{user_prompt}")
+    # Invoke the agent directly
+    response = agent.invoke(
+        {"messages": [{"role": "user", "content": user_prompt}]}
+    )
+    print(f"[INFO] Agent finished with response:\n{response['output']}") # Assuming 'output' key for consistency
 
     # After the agent run, output the list of files that were written
     github_output_path = os.getenv("GITHUB_OUTPUT")
@@ -51,20 +61,16 @@ def main():
             print("[ERROR] Incomplete issue information for draft mode.")
             return
         
-        prompt = f"""
-        You are an expert software developer. Your task is to draft a solution for the following issue.
-        You have access to the following tools: {', '.join([t.name for t in [list_files, read_file, write_file]])}.
-        Use these tools to explore the codebase, understand the context, and then write the necessary code changes.
-        
+        user_prompt = f"""
+        Draft a solution for the following issue.
         Issue Title: {issue_title}
         Issue Description: {issue_body}
         
         Start by listing the files in the current directory to understand the project structure.
         Then, read the relevant files to understand the existing code.
         Finally, use the write_file tool to create or update the necessary files with your proposed solution.
-        Your final answer should be a summary of the files you wrote.
         """
-        run_agent(prompt)
+        run_agent(user_prompt)
 
     elif agent_mode == "revise":
         pr_number = os.getenv("PR_NUMBER")
@@ -75,10 +81,8 @@ def main():
         pr_diff = subprocess.check_output(['gh', 'pr', 'diff', pr_number]).decode('utf-8')
         pr_comments = subprocess.check_output(['gh', 'pr', 'view', pr_number, '--comments']).decode('utf-8')
 
-        prompt = f"""
-        You are an expert software developer. A pull request has received feedback, and you need to revise it.
-        You have access to the following tools: {', '.join([t.name for t in [list_files, read_file, write_file]])}.
-        Use these tools to explore the codebase, understand the context of the PR, and then write the necessary code changes based on the review comments.
+        user_prompt = f"""
+        Revise the pull request based on the provided feedback.
         
         Pull Request Diff:
         {pr_diff}
@@ -89,9 +93,8 @@ def main():
         Start by listing the files in the current directory to understand the project structure.
         Then, read the relevant files to understand the existing code.
         Finally, use the write_file tool to create or update the necessary files with your proposed revisions.
-        Your final answer should be a summary of the files you wrote.
         """
-        run_agent(prompt)
+        run_agent(user_prompt)
 
     else:
         print(f"[ERROR] Unknown agent mode: {agent_mode}")

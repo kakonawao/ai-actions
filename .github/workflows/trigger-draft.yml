@@ -7,25 +7,9 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  issues: write # Add issues: write permission to post comments
 
 jobs:
-  notify-draft-in-progress:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Post in-progress comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            Drafting a solution... ⏳
-            
-            You can follow the progress of the draft here:
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   call-draft-agent:
-    needs: notify-draft-in-progress # Ensure notification happens first
     uses: ./.github/workflows/draft-agent.yml
     with:
       issue_number: ${{ github.event.issue.number }}

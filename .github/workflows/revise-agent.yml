@@ -24,6 +24,17 @@ jobs:
   revise-task:
     runs-on: ubuntu-latest
     steps:
+      - name: Post in-progress comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.pr_number }}
+          body: |
+            Revising the pull request... ⏳
+            
+            You can follow the progress of the revision here:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout target repository
         uses: actions/checkout@v4
         with:

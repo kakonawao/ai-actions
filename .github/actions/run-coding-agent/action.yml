@@ -42,10 +42,6 @@ runs:
       with:
         python-version: ${{ inputs.python_version }}
 
-    - name: Install uv
-      shell: bash
-      run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
     - name: Install agent dependencies with uv
       shell: bash
       run: ~/.local/bin/uv pip install -p $(which python) .

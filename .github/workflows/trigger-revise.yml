@@ -6,27 +6,10 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write # Add pull-requests: write permission to post comments
+  pull-requests: write
 
 jobs:
-  notify-revision-in-progress:
-    if: contains(github.event.review.body, '/revise')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Post in-progress comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          # Use issue-number for PR comments as well
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            Revising the pull request... ⏳
-            
-            You can follow the progress of the revision here:
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
   call-revise-agent:
-    needs: notify-revision-in-progress # Ensure notification happens first
     if: contains(github.event.review.body, '/revise')
     uses: ./.github/workflows/revise-agent.yml
     with:

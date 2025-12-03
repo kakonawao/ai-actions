@@ -23,11 +23,23 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write # Add issues: write permission to post comments
 
 jobs:
   draft-task:
     runs-on: ubuntu-latest
     steps:
+      - name: Post in-progress comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.issue_number }}
+          body: |
+            Drafting a solution... ⏳
+            
+            You can follow the progress of the draft here:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout target repository
         uses: actions/checkout@v4
         with:
