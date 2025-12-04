@@ -15,6 +15,7 @@ def run_agent(user_prompt: str):
     gemini_model_name = os.getenv("GEMINI_MODEL")
     
     # Configure rate limit
+    rate_limiter = None
     rate_limit_str = os.getenv("GEMINI_RATE_LIMIT_PER_MINUTE")
     if rate_limit_str:
         rate_limit = int(rate_limit_str)
@@ -48,21 +49,23 @@ def run_agent(user_prompt: str):
     )
 
     print(f"[INFO] Running agent with prompt:\n{user_prompt}")
-    # Invoke the agent directly
     response = agent.invoke(
         {"messages": [{"role": "user", "content": user_prompt}]}
     )
-    print(f"[INFO] Agent finished with response:\n{response.content}") # Assuming 'output' key for consistency
+    print(f"[INFO] Agent finished with response:\n{response.content}")
 
-    # After the agent run, output the list of files that were written
+    # After the agent run out results
     github_output_path = os.getenv("GITHUB_OUTPUT")
     if github_output_path:
         with open(github_output_path, "a") as f:
+            # List of files
             f.write("changed_files<<EOF\n")
             for p in _written_files:
                 f.write(f"{p}\n")
             f.write("EOF\n")
-        print(f"[INFO] Outputted {_written_files} to changed_files.")
+
+            # Summary for pull request
+            f.write(f"agent_summary_output<<EOF\n{response.context}\nEOF\n")
     else:
         print("[ERROR] GITHUB_OUTPUT environment variable not set. Cannot set step output.")
 

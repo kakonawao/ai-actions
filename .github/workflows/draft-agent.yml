@@ -66,6 +66,7 @@ jobs:
           fi
 
       - name: Create Pull Request
+        id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,3 +81,13 @@ jobs:
           author: AI Developer <ai-developer@users.noreply.github.com>
           committer: AI Developer <ai-developer@users.noreply.github.com>
           add-paths: ${{ steps.run-agent.outputs.changed_files }}
+
+      - name: Post Agent Summary to PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.create-pr.outputs.pull-request-number }}
+          body: |
+            ## 🤖 AI Agent Summary
+            
+            ${{ steps.run-agent.outputs.agent_summary_output }}
+          token: ${{ secrets.GITHUB_TOKEN }}

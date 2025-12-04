@@ -37,6 +37,9 @@ outputs:
   changed_files:
     description: 'A multi-line string of file paths modified by the agent.'
     value: ${{ steps.run-script.outputs.changed_files }}
+  agent_summary_output:
+    description: 'The final natural language summary from the agent.'
+    value: ${{ steps.run-script.outputs.agent_summary_output }}
 
 runs:
   using: "composite"
