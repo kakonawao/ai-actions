@@ -2,6 +2,7 @@ import os
 import subprocess
 
 from langchain.agents import create_agent
+from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .tools import list_files, read_file, write_file, _written_files
@@ -12,7 +13,22 @@ def run_agent(user_prompt: str):
     print("[INFO] Initializing LangChain agent...")
     
     gemini_model_name = os.getenv("GEMINI_MODEL")
-    llm = ChatGoogleGenerativeAI(model=gemini_model_name, temperature=0)
+    
+    # Configure rate limit
+    rate_limit_str = os.getenv("GEMINI_RATE_LIMIT_PER_MINUTE")
+    if rate_limit_str:
+        rate_limit = int(rate_limit_str)
+        if rate_limit > 0:
+            print(f"[INFO] Setting Gemini API rate limit to {rate_limit} requests/minute.")
+            rate_limiter = InMemoryRateLimiter(requests_per_second=rate_limit / 60)
+        else:
+            print("[INFO] GEMINI_RATE_LIMIT_PER_MINUTE is 0 or less, no rate limit applied.")
+
+    llm = ChatGoogleGenerativeAI(
+        model=gemini_model_name, 
+        temperature=0,
+        rate_limiter=rate_limiter,
+    )
 
     tools = [list_files, read_file, write_file]
     
