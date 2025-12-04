@@ -52,7 +52,7 @@ def run_agent(user_prompt: str):
     response = agent.invoke(
         {"messages": [{"role": "user", "content": user_prompt}]}
     )
-    print(f"[INFO] Agent finished with response:\n{response['output']}") # Assuming 'output' key for consistency
+    print(f"[INFO] Agent finished with response:\n{response.content}") # Assuming 'output' key for consistency
 
     # After the agent run, output the list of files that were written
     github_output_path = os.getenv("GITHUB_OUTPUT")
