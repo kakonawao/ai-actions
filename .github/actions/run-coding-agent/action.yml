@@ -32,10 +32,6 @@ inputs:
     description: 'The rate limit per minute for Gemini API calls. Set to 0 for no limit.'
     required: false
     default: '10'
-  working_directory:
-    description: 'The directory where the agent should perform file system operations.'
-    required: false
-    default: '.'
 
 outputs:
   changed_files:
@@ -72,4 +68,4 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
         GEMINI_MODEL: ${{ inputs.gemini_model }}
         GEMINI_RATE_LIMIT_PER_MINUTE: ${{ inputs.gemini_rate_limit_per_minute }}
-        AGENT_WORKING_DIRECTORY: ${{ inputs.working_directory }}
+        AGENT_WORKING_DIRECTORY: ${{ github.workspace }}
