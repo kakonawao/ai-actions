@@ -56,13 +56,12 @@ runs:
     - name: Install agent dependencies with uv
       shell: bash
       run: ~/.local/bin/uv pip install -p $(which python) .
-      working-directory: ${{ github.action_path }} # Reference the action's own path
+      working-directory: ${{ github.action_path }}
 
     - name: Run agent script
       id: run-script
       shell: bash
       run: python -m src.main
-      working-directory: ${{ github.action_path }}
       env:
         AGENT_MODE: ${{ inputs.agent_mode }}
         ISSUE_TITLE: ${{ inputs.issue_title }}
@@ -72,4 +71,4 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
         GEMINI_MODEL: ${{ inputs.gemini_model }}
         GEMINI_RATE_LIMIT_PER_MINUTE: ${{ inputs.gemini_rate_limit_per_minute }}
-        AGENT_WORKING_DIRECTORY: ${{ inputs.working_directory }} # Pass working directory as env var
+        AGENT_WORKING_DIRECTORY: ${{ inputs.working_directory }}
