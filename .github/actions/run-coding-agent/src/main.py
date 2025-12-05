@@ -14,7 +14,14 @@ def _extract_response_text(response: any) -> str:
     print("[DEBUG] Full agent response object:")
     pprint.pprint(response)
 
-    if isinstance(response, dict):
+    if isinstance(response, list) and len(response) > 0:
+        # If it's a list, assume the first element contains the main response
+        first_element = response[0]
+        if isinstance(first_element, dict) and 'text' in first_element:
+            return first_element['text']
+        elif hasattr(first_element, 'content'): # For AIMessage or similar objects in a list
+            return first_element.content
+    elif isinstance(response, dict):
         if 'messages' in response and isinstance(response['messages'], list) and len(response['messages']) > 0:
             return response['messages'][-1].content
         elif 'output' in response:
