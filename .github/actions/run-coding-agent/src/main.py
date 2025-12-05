@@ -3,6 +3,7 @@ import subprocess
 import pprint
 
 from langchain.agents import create_agent
+from langchain_core.messages import AIMessage # Import AIMessage
 from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -14,21 +15,22 @@ def _extract_response_text(response: any) -> str:
     print("[DEBUG] Full agent response object:")
     pprint.pprint(response)
 
-    if isinstance(response, list) and len(response) > 0:
-        # If it's a list, assume the first element contains the main response
-        first_element = response[0]
-        if isinstance(first_element, dict) and 'text' in first_element:
-            return first_element['text']
-        elif hasattr(first_element, 'content'): # For AIMessage or similar objects in a list
-            return first_element.content
-    elif isinstance(response, dict):
-        if 'messages' in response and isinstance(response['messages'], list) and len(response['messages']) > 0:
-            return response['messages'][-1].content
-        elif 'output' in response:
-            return response['output']
-    elif hasattr(response, 'content'):
-        return response.content
-    
+    try:
+        if isinstance(response, dict) and 'messages' in response:
+            # Find the last AIMessage in the list
+            for message in reversed(response['messages']):
+                if isinstance(message, AIMessage):
+                    content = message.content
+                    # Handle cases where content is a list with a dict inside
+                    if isinstance(content, list) and len(content) > 0 and isinstance(content[0], dict) and 'text' in content[0]:
+                        return content[0]['text']
+                    # Handle cases where content is just a string
+                    elif isinstance(content, str):
+                        return content
+            return "No AIMessage with parsable content found in the final response."
+    except (IndexError, KeyError, AttributeError) as e:
+        print(f"[WARNING] Could not parse the expected response structure: {e}")
+
     return str(response) # Fallback to string representation
 
 
