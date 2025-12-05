@@ -103,6 +103,15 @@ def run_agent(user_prompt: str):
 
 
 def main():
+    # Change the current working directory to the target repository's root
+    working_directory = os.getenv("AGENT_WORKING_DIRECTORY", ".")
+    if os.path.exists(working_directory):
+        print(f"[INFO] Changing working directory to: {working_directory}")
+        os.chdir(working_directory)
+    else:
+        print(f"[ERROR] Working directory not found: {working_directory}")
+        return
+
     agent_mode = os.getenv("AGENT_MODE", "draft")
 
     if agent_mode == "draft":
