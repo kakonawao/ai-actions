@@ -1,13 +1,25 @@
-# AI Agents for Software Development
+# AI Actions
 
-This repository contains reusable GitHub Actions workflows that act as AI agents to assist in software development tasks, such as drafting initial solutions and revising pull requests.
+This repository contains reusable GitHub Actions workflows that act as AI agents to automate various development tasks.
+
+## Summary of Changes
+
+This update includes several improvements and clarifications:
+
+*   **Renamed Repository Title**: Changed from "AI Agents for Software Development" to "AI Actions" for better clarity.
+*   **GitHub Token Clarification**: Clarified that `GITHUB_TOKEN` is automatically provided by GitHub Actions, with guidance on using a Personal Access Token (PAT) if different permissions are required.
+*   **Simplified Secret Management**: Removed explicit `GITHUB_TOKEN` from individual agent secret lists, as it's generally handled automatically.
+*   **Updated Workflow Triggers**: Revised example trigger workflows to use local workflow calls (`uses: ./.github/workflows/`).
+*   **Draft Agent Enhancements**: Added `issue_number` as an input for the Draft Agent.
+*   **Revise Agent Refinements**: Simplified the Revise Agent trigger to specifically respond to pull request review comments containing `/revise` and introduced a `branch` input for better control.
 
 ## Setup
 
 To use these agents, you will need to set up the following secrets in your GitHub repository or organization:
 
-*   `GITHUB_TOKEN`: A GitHub personal access token with appropriate permissions (e.g., `contents: write`, `issues: write`, `pull_requests: write`) for the agents to create/update files, issues, and PRs.
 *   `GEMINI_API_KEY`: Your API key for the Gemini model. This is required for both the Draft and Revise agents to interact with the AI.
+
+The `GITHUB_TOKEN` is automatically provided by GitHub Actions with appropriate permissions for the agents to create/update files, issues, and PRs. If you need to use a Personal Access Token (PAT) with different permissions, you can set it as a repository secret (e.g., `MY_GITHUB_TOKEN`) and pass it to the workflows.
 
 ## Draft Agent (`draft-agent.yml`)
 
@@ -15,76 +27,63 @@ This agent drafts an initial solution based on a new issue.
 
 ### Inputs:
 
+*   `issue_number`: The number of the GitHub issue.
 *   `issue_title`: Title of the GitHub issue.
 *   `issue_body`: Body of the GitHub issue.
 
 ### Secrets:
 
-*   `GITHUB_TOKEN`: Required for interacting with GitHub API.
 *   `GEMINI_API_KEY`: Your API key for the Gemini model.
 
 ### Example Trigger Workflow (`.github/workflows/trigger-draft.yml`):
 
 ```yaml
-name: Draft Solution on Command
+name: Trigger Draft Agent
 
 on:
   issues:
     types: [opened, reopened]
 
 jobs:
-  draft_solution:
-    permissions:
-      contents: write        # Required if the agent creates/updates files
-      issues: read           # Required if the agent creates comments/labels on issues
-      pull-requests: write   # Required if the agent creates PRs
-    steps:
-      - name: Draft Solution
-        uses: kakonawao/ai-actions/.github/workflows/draft-agent.yml@main
-        with:
-          issue_title: ${{ github.event.issue.title }}
-          issue_body: ${{ github.event.issue.body }}
-        secrets:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  call-draft-agent:
+    uses: ./.github/workflows/draft-agent.yml
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_title: ${{ github.event.issue.title }}
+      issue_body: ${{ github.event.issue.body }}
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 ```
 
 ## Revise Agent (`revise-agent.yml`)
 
-This agent revises a pull request based on review comments or other triggers.
+This agent revises a pull request based on a review comment containing `/revise`.
 
 ### Inputs:
 
 *   `pr_number`: The pull request number.
+*   `branch`: The branch of the pull request to checkout and revise.
 
 ### Secrets:
 
-*   `GITHUB_TOKEN`: Required for interacting with GitHub API.
 *   `GEMINI_API_KEY`: Your API key for the Gemini model.
 
 ### Example Trigger Workflow (`.github/workflows/trigger-revise.yml`):
 
 ```yaml
+name: Trigger Revise Agent
+
 on:
   pull_request_review:
     types: [submitted]
-  issue_comment: # Often revisions are also triggered by comments (e.g., /revise command)
-    types: [created]
 
 jobs:
-  revise_pr:
-    if: |
-      github.event_name == 'pull_request_review' && (github.event.review.state == 'commented' || github.event.review.state == 'changes_requested') ||
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/revise'))
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Revise Pull Request
-        uses: kakonawao/ai-actions/.github/workflows/revise-agent.yml@main
-        with:
-          pr_number: ${{ github.event.issue.pull_request.number || github.event.pull_request.number }} # Handle both issue_comment (pr_number under issue.pull_request) and pull_request_review (pr_number under pull_request)
-        secrets:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  call-revise-agent:
+    if: contains(github.event.review.body, '/revise')
+    uses: ./.github/workflows/revise-agent.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      branch: ${{ github.event.pull_request.head.ref }}
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 ```
