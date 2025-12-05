@@ -88,13 +88,3 @@ jobs:
           committer: AI Developer <ai-developer@users.noreply.github.com>
           add-paths: ${{ steps.run-agent.outputs.changed_files }}
           draft: true # Create the PR in draft status
-
-      - name: Post Agent Summary to PR
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ steps.create-pr.outputs.pull-request-number }}
-          body: |
-            ## 🤖 AI Agent Summary
-            
-            ${{ steps.run-agent.outputs.agent_summary_output }}
-          token: ${{ secrets.GITHUB_TOKEN }}
