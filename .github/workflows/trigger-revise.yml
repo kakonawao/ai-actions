@@ -1,4 +1,4 @@
-name: Trigger Revise Agent
+name: Trigger Revise PR
 
 on:
   pull_request_review:
@@ -9,9 +9,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  call-revise-agent:
+  call-revise-pr:
     if: contains(github.event.review.body, '/revise')
-    uses: ./.github/workflows/revise-agent.yml
+    uses: ./.github/workflows/revise-pr.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
       branch: ${{ github.event.pull_request.head.ref }}

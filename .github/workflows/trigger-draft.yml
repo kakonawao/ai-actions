@@ -1,4 +1,4 @@
-name: Trigger Draft Agent
+name: Trigger Draft PR
 
 on:
   issues:
@@ -10,8 +10,8 @@ permissions:
   issues: write
 
 jobs:
-  call-draft-agent:
-    uses: ./.github/workflows/draft-agent.yml
+  call-draft-pr:
+    uses: ./.github/workflows/draft-pr.yml
     with:
       issue_number: ${{ github.event.issue.number }}
       issue_title: ${{ github.event.issue.title }}

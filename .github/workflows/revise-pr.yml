@@ -1,4 +1,4 @@
-name: Revise Agent
+name: Revise PR
 
 on:
   workflow_call:
@@ -69,6 +69,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit and push changes
+        id: commit-push
         run: |
           # Stage files
           if [ -n "${{ steps.run-agent.outputs.changed_files }}" ]; then
@@ -95,3 +96,13 @@ jobs:
             fi
             git push --force-with-lease origin HEAD:${{ inputs.branch }}
           fi
+
+      - name: Post Agent Summary to PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ inputs.pr_number }}
+          body: |
+            ## 🤖 AI Agent Summary
+            
+            ${{ steps.run-agent.outputs.agent_summary_output }}
+          token: ${{ secrets.GITHUB_TOKEN }}
