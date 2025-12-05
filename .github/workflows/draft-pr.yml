@@ -75,12 +75,19 @@ jobs:
           body: |
             This PR was automatically drafted by an AI agent in response to issue #${{ inputs.issue_number }}.
             
-            ${{ inputs.issue_body }}
+            ## 🤖 AI Agent Summary
+            
+            ${{ steps.run-agent.outputs.agent_summary_output }}
+            
+            ---
+            
+            Closes #${{ inputs.issue_number }}
           branch: ai-draft/${{ inputs.issue_number }}
           base: main
           author: AI Developer <ai-developer@users.noreply.github.com>
           committer: AI Developer <ai-developer@users.noreply.github.com>
           add-paths: ${{ steps.run-agent.outputs.changed_files }}
+          draft: true # Create the PR in draft status
 
       - name: Post Agent Summary to PR
         uses: peter-evans/create-or-update-comment@v4

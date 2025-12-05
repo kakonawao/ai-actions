@@ -1,37 +1,30 @@
 import os
 import subprocess
-import pprint
 
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage # Import AIMessage
+from langchain_core.messages import AIMessage
 from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .tools import list_files, read_file, write_file, _written_files
 
 
-def _extract_response_text(response: any) -> str:
-    # Log the full response object for debugging
-    print("[DEBUG] Full agent response object:")
-    pprint.pprint(response)
-
+def _extract_response_text(response: dict) -> str:
     try:
-        if isinstance(response, dict) and 'messages' in response:
-            # Find the last AIMessage in the list
-            for message in reversed(response['messages']):
-                if isinstance(message, AIMessage):
-                    content = message.content
-                    # Handle cases where content is a list with a dict inside
-                    if isinstance(content, list) and len(content) > 0 and isinstance(content[0], dict) and 'text' in content[0]:
-                        return content[0]['text']
-                    # Handle cases where content is just a string
-                    elif isinstance(content, str):
-                        return content
-            return "No AIMessage with parsable content found in the final response."
-    except (IndexError, KeyError, AttributeError) as e:
+        # Find the last AIMessage in the list
+        for message in reversed(response['messages']):
+            if isinstance(message, AIMessage):
+                content = message.content
+                # Handle cases where content is a list with a dict inside
+                if isinstance(content, list) and len(content) > 0 and isinstance(content[0], dict) and 'text' in content[0]:
+                    return content[0]['text']
+                # Handle cases where content is just a string
+                elif isinstance(content, str):
+                    return content
+        return "No AIMessage with parsable content found in the final response."
+    except (IndexError, KeyError, AttributeError, TypeError) as e:
         print(f"[WARNING] Could not parse the expected response structure: {e}")
-
-    return str(response) # Fallback to string representation
+        return f"Could not parse agent's final response. Raw response: {str(response)}"
 
 
 def _write_outputs_to_github(final_response_text: str, written_files: list):
@@ -57,7 +50,7 @@ def _get_rate_limiter() -> InMemoryRateLimiter | None:
     rate_limit_str = os.getenv("GEMINI_RATE_LIMIT_PER_MINUTE")
     if not rate_limit_str:
         return None
-        
+
     try:
         rate_limit = int(rate_limit_str)
         if rate_limit > 0:
@@ -73,18 +66,18 @@ def _get_rate_limiter() -> InMemoryRateLimiter | None:
 
 def run_agent(user_prompt: str):
     print("[INFO] Initializing LangChain agent...")
-    
+
     gemini_model_name = os.getenv("GEMINI_MODEL")
     rate_limiter = _get_rate_limiter()
 
     llm = ChatGoogleGenerativeAI(
-        model=gemini_model_name, 
+        model=gemini_model_name,
         temperature=0,
         rate_limiter=rate_limiter,
     )
 
     tools = [list_files, read_file, write_file]
-    
+
     # Define the system prompt for the agent
     system_prompt_content = (
         "You are an expert software developer. Your task is to analyze the codebase, "
@@ -92,7 +85,7 @@ def run_agent(user_prompt: str):
         "Use the available tools to explore the codebase, read relevant files, and write new or updated files. "
         "Your final answer should be a summary of the files you wrote or a confirmation that no changes were needed."
     )
-    
+
     # Create the agent directly
     agent = create_agent(
         model=llm,
@@ -129,7 +122,7 @@ def main():
         if not all([issue_title, issue_body]):
             print("[ERROR] Incomplete issue information for draft mode.")
             return
-        
+
         user_prompt = f"""
         Draft a solution for the following issue.
         Issue Title: {issue_title}

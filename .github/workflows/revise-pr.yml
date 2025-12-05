@@ -97,12 +97,26 @@ jobs:
             git push --force-with-lease origin HEAD:${{ inputs.branch }}
           fi
 
-      - name: Post Agent Summary to PR
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ inputs.pr_number }}
-          body: |
-            ## 🤖 AI Agent Summary
-            
-            ${{ steps.run-agent.outputs.agent_summary_output }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update PR Description with Agent Summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          SUMMARY: ${{ steps.run-agent.outputs.agent_summary_output }}
+        run: |
+          # Fetch the current PR body
+          CURRENT_BODY=$(gh pr view $PR_NUMBER --json body -q .body)
+          
+          # Construct the new body
+          NEW_BODY=$(cat <<-EOF
+          $CURRENT_BODY
+          
+          ---
+          
+          ## 🤖 AI Agent Summary (Revision)
+          
+          $SUMMARY
+          EOF
+          )
+          
+          # Update the PR body
+          gh pr edit $PR_NUMBER --body "$NEW_BODY"
